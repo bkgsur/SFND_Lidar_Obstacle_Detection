@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 #include <pcl/common/pca.h>
 #include "quiz/cluster/kdtree.h"
+#include "quiz/cluster/cluster.cpp"
 //constructor:
 template<typename PointT>
 ProcessPointClouds<PointT>::ProcessPointClouds() {}
@@ -136,6 +137,30 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     auto startTime = std::chrono::steady_clock::now();
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
     KdTree<PointT>* tree = new KdTree<PointT>();
+
+    for (int i = 0; i < cloud->points.size(); ++i)
+    {
+        tree->insert(cloud->points[i], i);
+    }
+
+    std::vector<std::vector<int>> clusterIndices = euclideanCluster(cloud->points, tree, clusterTolerance);
+
+
+    for (std::vector<int> cluster : clusterIndices)
+    {
+        typename pcl::PointCloud<PointT>::Ptr cCloud ( new pcl::PointCloud<PointT>());
+        for (int i : cluster)
+        {
+            cCloud->points.push_back(PointT(cloud->points[i]));
+        }
+        if (cCloud->points.size() >= minSize && cCloud->points.size() <= maxSize)
+        {
+            cCloud->width = cCloud->points.size();
+            cCloud->height = 1;
+            cCloud->is_dense = true;
+            clusters.push_back(cCloud);
+        }
+    }
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);

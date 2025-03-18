@@ -43,8 +43,8 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData(std::vector<std::vector<float>> p
 
 }
 
-
-void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Box window, int& iteration, uint depth=0)
+template <typename PointT>
+void render2DTree(Node<PointT>* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Box window, int& iteration, uint depth=0)
 {
 
 	if(node!=NULL)
@@ -73,7 +73,8 @@ void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Bo
 
 	}
 }
-void clusterHelper(const std::vector<std::vector<float>>& points, std::vector<bool>& processedPoints, int index, std::vector<int>& cluster, KdTree* tree, float distanceTol)
+template <typename PointT>
+void clusterHelper(const std::vector<std::vector<float>>& points, std::vector<bool>& processedPoints, int index, std::vector<int>& cluster, KdTree<PointT>* tree, float distanceTol)
 {
     processedPoints[index] = true;
     cluster.push_back(index);
@@ -87,7 +88,8 @@ void clusterHelper(const std::vector<std::vector<float>>& points, std::vector<bo
         }
     }
 }
-std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
+template <typename PointT>
+std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree<PointT>* tree, float distanceTol)
 {
     std::vector<std::vector<int>> clusters;
     std::vector<bool> processedPoints(points.size(), false);    // map the processed points
@@ -120,10 +122,10 @@ int main ()
 
 	// Create data
 	std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3}, {7.2,6.1}, {8.0,5.3}, {7.2,7.1}, {0.2,-7.1}, {1.7,-6.9}, {-1.2,-7.2}, {2.2,-8.9} };
-	//std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3} };
+ 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData(points);
 
-	KdTree* tree = new KdTree;
+	KdTree<pcl::PointXYZ>* tree = new KdTree<pcl::PointXYZ>();
   
     for (int i=0; i<points.size(); i++) 
     	tree->insert(points[i],i); 

@@ -1,5 +1,5 @@
-/* \author Aaron Brown */
-// Quiz on implementing kd tree
+#ifndef CUSTOM_KD_TREE_H_
+#define CUSTOM_KD_TREE_H_
 
 #include "../../render/render.h"
 
@@ -130,6 +130,6 @@ struct KdTree
 
 };
 
-
+#endif /* CUSTOM_KD_TREE_H_ */
 
 
