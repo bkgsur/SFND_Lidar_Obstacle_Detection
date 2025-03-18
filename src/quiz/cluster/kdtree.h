@@ -4,15 +4,15 @@
 #include "../../render/render.h"
 
 
-// Structure to represent node of kd tree
+template <typename PointT>
 struct Node
 {
-	std::vector<float> point;
+	PointT point;
 	int id;
 	Node* left;
 	Node* right;
 
-	Node(std::vector<float> arr, int setId):point(arr), id(setId), left(NULL), right(NULL)
+	Node(PointT arr, int setId):point(arr), id(setId), left(NULL), right(NULL)
 	{}
 
 	~Node()
@@ -21,10 +21,10 @@ struct Node
 		delete right;
 	}
 };
-
+template <typename PointT>
 struct KdTree
 {
-	Node* root;
+	Node<PointT>* root;
 
 	KdTree():root(NULL)	{}
 
@@ -33,60 +33,94 @@ struct KdTree
 		delete root;
 	}
 
-	void insertHelper(Node** node, uint depth, std::vector<float> point, int id)
+	float GetDataPoint (PointT point, uint depth)
 	{
-		if(*node ==NULL)
+		if(depth==0)
 		{
-			*node = new Node(point,id);
+			return point.x;
+		}
+		else if(depth==1)
+		{
+			return point.y;
 		}
 		else
 		{
-			 uint cd = depth%2;
-			 if(point[cd] <((*node)->point[cd]))
+			return  point.z;
+		}
+	}
+	void insertHelper(Node<PointT>*&  node, uint depth, PointT point, int id)
+	{
+		if(node == nullptr)
+		{
+			node = new Node<PointT>(point,id);
+		}
+		else
+		{
+			 uint cd = depth%3;
+
+			 if((GetDataPoint(point,cd)) <(GetDataPoint(node->point,cd)))
 			 {
-				insertHelper(&((*node)->left),   depth+1,  point,  id);
+				insertHelper(node->left,   depth+1,  point,  id);
 			 }
 			 else
 			 {
-				insertHelper(&((*node)->right),   depth+1,  point,  id);
+				insertHelper(node->right,   depth+1,  point,  id);
 			 }
 
 		}
 	}
 
-	void searchHelper(std::vector<float> target, Node* node, int depth, float distanceTol, std::vector<int>& ids)
+	float GetDistance(PointT target, PointT nodePoint)
+	{
+		float np_x=GetDataPoint(nodePoint,0);
+		float target_x= GetDataPoint(target,0);
+		float np_y=GetDataPoint(nodePoint,1);
+		float target_y= GetDataPoint(target,1);
+		float np_z=GetDataPoint(nodePoint,2);
+		float target_z= GetDataPoint(target,2);
+		return sqrt(((np_x - target_x)*(np_x- target_x))
+		+ ((np_y - target_y)*(np_y- target_y))+
+		((np_z - target_z)*(np_z- target_z)));
+	}
+
+	void searchHelper(PointT target, Node<PointT>* node, int depth, float distanceTol, std::vector<int>& ids)
 	{
 		if (node!=NULL)
 		{
-			if ((node->point[0]>=(target[0]-distanceTol) &&(node->point[0]<=(target[0] + distanceTol))) 
+			if ((GetDataPoint(node->point,0)>=(GetDataPoint(target,0)-distanceTol) &&(GetDataPoint(node->point,0)<=(GetDataPoint(target,0) + distanceTol))) 
 			&& 
-			((node->point[1]>=(target[1]-distanceTol) &&(node->point[1]<=(target[1] + distanceTol)))))
+			(GetDataPoint(node->point,1)>=(GetDataPoint(target,1)-distanceTol) &&(GetDataPoint(node->point,1)<=(GetDataPoint(target,1) + distanceTol))) 
+			&& 
+			(GetDataPoint(node->point,2)>=(GetDataPoint(target,2)-distanceTol) &&(GetDataPoint(node->point,2)<=(GetDataPoint(target,2) + distanceTol))) )
 			{
-				float distance = sqrt((node->point[0] - target[0])*(node->point[0] - target[0]) + (node->point[1] - target[1])*(node->point[1] - target[1]));
+				
+				float distance = GetDistance(target,node->point);
 				if (distance <=distanceTol)
 				{
 					ids.push_back(node->id);
 				}
 			}
-			if((target[depth%2]-distanceTol)<(node->point[depth%2]))
+			float  target_val = GetDataPoint (target,   depth%3);
+			float  point_val = GetDataPoint (node->point,   depth%3);
+			if((target_val -distanceTol)<(point_val))
 			{
 				searchHelper(target, node->left,depth+1,distanceTol,ids);
 			}
-			if((target[depth%2]+distanceTol)>(node->point[depth%2]))
+			if((target_val +distanceTol)>(point_val))
 			{
 				searchHelper(target, node->right,depth+1,distanceTol,ids);
 			}
 		}
 	}
 
-	void insert(std::vector<float> point, int id)
+	void insert(PointT point, int id)
 	{
-		insertHelper(&root, 0,  point, id);
+		insertHelper(root, 0,  point, id);
 
 	}
 
 	// return a list of point ids in the tree that are within distance of target
-	std::vector<int> search(std::vector<float> target, float distanceTol)
+	std::vector<int> search(PointT target, float distanceTol)
 	{
 		std::vector<int> ids;
 		searchHelper(target, root,0,distanceTol,ids);

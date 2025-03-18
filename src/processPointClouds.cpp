@@ -3,6 +3,7 @@
 #include "processPointClouds.h"
 #include <boost/filesystem.hpp>
 #include <pcl/common/pca.h>
+#include "quiz/cluster/kdtree.h"
 //constructor:
 template<typename PointT>
 ProcessPointClouds<PointT>::ProcessPointClouds() {}
@@ -133,33 +134,9 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
     // Time clustering process
     auto startTime = std::chrono::steady_clock::now();
-
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+    KdTree<PointT>* tree = new KdTree<PointT>();
 
-    // Creating the KdTree object for the search method of the extraction
-    typename  pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-    tree->setInputCloud (cloud);
-
-    std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<PointT> ec;
-    ec.setClusterTolerance (clusterTolerance);  
-    ec.setMinClusterSize (minSize);
-    ec.setMaxClusterSize (maxSize);
-    ec.setSearchMethod (tree);
-    ec.setInputCloud (cloud);
-    ec.extract (cluster_indices);
- 
-    for (const auto& cluster : cluster_indices)
-    {
-        typename pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-        for (const auto& idx : cluster.indices) {
-            cloud_cluster->push_back((*cloud)[idx]);
-        } 
-        cloud_cluster->width = cloud_cluster->size ();
-        cloud_cluster->height = 1;
-        cloud_cluster->is_dense = true;
-        clusters.push_back(cloud_cluster);
-    }
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size() << " clusters" << std::endl;
