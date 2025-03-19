@@ -1,5 +1,5 @@
-#ifndef CUSTOM_KD_TREE_H_
-#define CUSTOM_KD_TREE_H_
+#ifndef PROJECT_KD_TREE_H_
+#define PROJECT_KD_TREE_H_
 
 #include "../../render/render.h"
 
@@ -130,6 +130,6 @@ struct KdTree
 
 };
 
-#endif /* CUSTOM_KD_TREE_H_ */
+#endif /* PROJECT_KD_TREE_H_ */
 
 
